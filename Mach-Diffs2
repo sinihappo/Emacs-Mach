@@ -1,0 +1,136 @@
+No differences encountered
+*** /tmp/RCSA000458	Wed Jun 17 16:18:53 1992
+--- crt0.c	Tue Oct 22 16:19:30 1991
+***************
+*** 209,214 ****
+--- 209,216 ----
+    start1 ();
+  }
+  
++ int	(*mach_init_routine)();
++ 
+  static
+  start1 (CRT0_DUMMIES argc, xargv)
+       int argc;
+***************
+*** 219,224 ****
+--- 221,228 ----
+  
+    if ((char *)environ == xargv)
+      environ--;
++   if (mach_init_routine)
++     (void) mach_init_routine();
+    exit (main (argc, argv, environ));
+  }
+  #else /* not CRT0_DUMMIES */
+*** /tmp/RCSA000458	Wed Jun 17 16:18:54 1992
+--- emacs.c	Tue Feb 11 12:15:51 1992
+***************
+*** 459,464 ****
+--- 459,465 ----
+  #ifdef SYMS_MACHINE
+        SYMS_MACHINE;
+  #endif
++       syms_of_mach_alloc();
+  
+        keys_of_casefiddle ();
+        keys_of_cmds ();
+*** /tmp/RCSA000458	Wed Jun 17 16:18:54 1992
+--- insdel.c	Tue Oct 22 15:15:26 1991
+***************
+*** 206,212 ****
+    /* If we have to get more space, get enough to last a while.  */
+    increment += 2000;
+  
+!   memory = (unsigned char *) realloc (BEG_ADDR,
+  				      Z - BEG + GAP_SIZE + increment);
+    if (memory == 0)
+      memory_full ();
+--- 206,212 ----
+    /* If we have to get more space, get enough to last a while.  */
+    increment += 2000;
+  
+!   memory = (unsigned char *) buf_realloc (BEG_ADDR,
+  				      Z - BEG + GAP_SIZE + increment);
+    if (memory == 0)
+      memory_full ();
+*** /tmp/RCSA000458	Wed Jun 17 16:18:55 1992
+--- lisp.h	Tue Oct 22 15:58:19 1991
+***************
+*** 983,988 ****
+--- 983,990 ----
+  
+  extern void debugger ();
+  
++ #define init_process emacs_init_process
++ extern char *buf_malloc (), *buf_realloc ();
+  extern char *malloc (), *realloc (), *getenv (), *ctime (), *getwd ();
+  extern long *xmalloc (), *xrealloc ();
+  
+*** /tmp/RCSA000458	Wed Jun 17 16:18:55 1992
+--- malloc.c	Tue Oct 22 15:15:27 1991
+***************
+*** 217,222 ****
+--- 217,223 ----
+    lim_data = 0;
+    warnlevel = 0;
+    warnfunction = warnfun;
++   buf_malloc_init(start,warnfun);
+  }
+  
+  /* Return the maximum size to which MEM can be realloc'd
+*** /tmp/RCSA000458	Wed Jun 17 16:18:56 1992
+--- xdisp.c	Thu Feb 13 22:42:00 1992
+***************
+*** 708,714 ****
+    /* If current starting point was originally the beginning of a line
+       but no longer is, find a new starting point.  */
+    else if (!NULL (w->start_at_line_beg)
+! 	   && !(startp == BEGV
+  		|| FETCH_CHAR (startp - 1) == '\n'))
+      {
+        goto recenter;
+--- 708,714 ----
+    /* If current starting point was originally the beginning of a line
+       but no longer is, find a new starting point.  */
+    else if (!NULL (w->start_at_line_beg)
+! 	   && !(startp == BEGV || startp == 1
+  		|| FETCH_CHAR (startp - 1) == '\n'))
+      {
+        goto recenter;
+*** /tmp/RCSA000458	Wed Jun 17 16:18:57 1992
+--- ymakefile	Tue Feb 11 12:27:48 1992
+***************
+*** 228,234 ****
+  	eval.o fns.o print.o lread.o \
+  	abbrev.o syntax.o UNEXEC mocklisp.o bytecode.o \
+  	process.o callproc.o $(environobj) \
+! 	doprnt.o
+  
+  #ifdef TERMINFO
+  /* Used to be -ltermcap here.  If your machine needs that,
+--- 228,234 ----
+  	eval.o fns.o print.o lread.o \
+  	abbrev.o syntax.o UNEXEC mocklisp.o bytecode.o \
+  	process.o callproc.o $(environobj) \
+! 	doprnt.o mach_alloc.o
+  
+  #ifdef TERMINFO
+  /* Used to be -ltermcap here.  If your machine needs that,
+***************
+*** 278,284 ****
+  SHELL=/bin/sh
+  
+  /* Construct full set of libraries to be linked.  */
+! LIBES = LIBS_TERMCAP $(LIBX) LIBS_SYSTEM LIBS_MACHINE LIBS_DEBUG LIB_STANDARD $(GNULIB_VAR)
+  
+  /* Enable recompilation of certain other files depending on system type.  */
+  
+--- 278,284 ----
+  SHELL=/bin/sh
+  
+  /* Construct full set of libraries to be linked.  */
+! LIBES = /usr/lib/libnewsbrk.a -lmach LIBS_TERMCAP $(LIBX) LIBS_SYSTEM LIBS_MACHINE LIBS_DEBUG LIB_STANDARD $(GNULIB_VAR)
+  
+  /* Enable recompilation of certain other files depending on system type.  */
+  

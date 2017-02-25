@@ -1,0 +1,154 @@
+*** /tmp/RCSA001070	Wed Jun 17 16:58:05 1992
+--- buffer.c	Wed Jun 17 16:29:58 1992
+***************
+*** 165,171 ****
+    if (!b) memory_full ();
+  
+    BUF_GAP_SIZE (b) = 20;
+!   data = (unsigned char *) malloc (BUF_GAP_SIZE (b));
+    if (!data)
+      {
+        free (b);
+--- 165,171 ----
+    if (!b) memory_full ();
+  
+    BUF_GAP_SIZE (b) = 20;
+!   data = (unsigned char *) buf_malloc (BUF_GAP_SIZE (b));
+    if (!data)
+      {
+        free (b);
+*** /tmp/RCSA001070	Wed Jun 17 16:58:06 1992
+--- crt0.c	Wed Jun 17 16:19:22 1992
+***************
+*** 219,224 ****
+--- 219,226 ----
+    start1 ();
+  }
+  
++ int	(*mach_init_routine)();
++ 
+  static
+  start1 (CRT0_DUMMIES argc, xargv)
+       int argc;
+***************
+*** 229,234 ****
+--- 231,238 ----
+  
+    if ((char *)environ == xargv)
+      environ--;
++   if (mach_init_routine)
++     (void) mach_init_routine();
+    exit (main (argc, argv, environ));
+  }
+  #else /* not CRT0_DUMMIES */
+*** /tmp/RCSA001070	Wed Jun 17 16:58:06 1992
+--- emacs.c	Wed Jun 17 16:19:23 1992
+***************
+*** 511,516 ****
+--- 511,517 ----
+  #ifdef SYMS_MACHINE
+        SYMS_MACHINE;
+  #endif
++       syms_of_mach_alloc();
+  
+        keys_of_casefiddle ();
+        keys_of_cmds ();
+*** /tmp/RCSA001070	Wed Jun 17 16:58:07 1992
+--- insdel.c	Wed Jun 17 16:19:23 1992
+***************
+*** 206,212 ****
+    /* If we have to get more space, get enough to last a while.  */
+    increment += 2000;
+  
+!   memory = (unsigned char *) realloc (BEG_ADDR,
+  				      Z - BEG + GAP_SIZE + increment);
+    if (memory == 0)
+      memory_full ();
+--- 206,212 ----
+    /* If we have to get more space, get enough to last a while.  */
+    increment += 2000;
+  
+!   memory = (unsigned char *) buf_realloc (BEG_ADDR,
+  				      Z - BEG + GAP_SIZE + increment);
+    if (memory == 0)
+      memory_full ();
+*** /tmp/RCSA001070	Wed Jun 17 16:58:07 1992
+--- lisp.h	Wed Jun 17 16:19:24 1992
+***************
+*** 983,988 ****
+--- 983,990 ----
+  
+  extern void debugger ();
+  
++ #define init_process emacs_init_process
++ extern char *buf_malloc (), *buf_realloc ();
+  extern char *malloc (), *realloc (), *getenv (), *ctime (), *getwd ();
+  extern long *xmalloc (), *xrealloc ();
+  
+*** /tmp/RCSA001070	Wed Jun 17 16:58:07 1992
+--- malloc.c	Wed Jun 17 16:19:24 1992
+***************
+*** 219,224 ****
+--- 219,225 ----
+    lim_data = 0;
+    warnlevel = 0;
+    warnfunction = warnfun;
++   buf_malloc_init(start,warnfun);
+  }
+  
+  /* Return the maximum size to which MEM can be realloc'd
+*** /tmp/RCSA001070	Wed Jun 17 16:58:08 1992
+--- xdisp.c	Wed Jun 17 16:19:25 1992
+***************
+*** 721,727 ****
+    /* If current starting point was originally the beginning of a line
+       but no longer is, find a new starting point.  */
+    else if (!NULL (w->start_at_line_beg)
+! 	   && !(startp == BEGV
+  		|| FETCH_CHAR (startp - 1) == '\n'))
+      {
+        goto recenter;
+--- 721,727 ----
+    /* If current starting point was originally the beginning of a line
+       but no longer is, find a new starting point.  */
+    else if (!NULL (w->start_at_line_beg)
+! 	   && !(startp == BEGV || startp == 1
+  		|| FETCH_CHAR (startp - 1) == '\n'))
+      {
+        goto recenter;
+*** /tmp/RCSA001070	Wed Jun 17 16:58:09 1992
+--- ymakefile	Wed Jun 17 16:20:34 1992
+***************
+*** 252,258 ****
+  	eval.o fns.o print.o lread.o \
+  	abbrev.o syntax.o UNEXEC mocklisp.o bytecode.o \
+  	process.o callproc.o $(environobj) \
+! 	doprnt.o
+  
+  #ifdef TERMINFO
+  /* Used to be -ltermcap here.  If your machine needs that,
+--- 252,258 ----
+  	eval.o fns.o print.o lread.o \
+  	abbrev.o syntax.o UNEXEC mocklisp.o bytecode.o \
+  	process.o callproc.o $(environobj) \
+! 	doprnt.o mach_alloc.o
+  
+  #ifdef TERMINFO
+  /* Used to be -ltermcap here.  If your machine needs that,
+***************
+*** 302,308 ****
+  SHELL=/bin/sh
+  
+  /* Construct full set of libraries to be linked.  */
+! LIBES = LIBS_TERMCAP $(LIBX) LIBS_SYSTEM LIBS_MACHINE LIBS_DEBUG $(GNULIB_VAR) LIB_STANDARD
+  
+  /* Enable recompilation of certain other files depending on system type.  */
+  
+--- 302,308 ----
+  SHELL=/bin/sh
+  
+  /* Construct full set of libraries to be linked.  */
+! LIBES = -lmach LIBS_TERMCAP $(LIBX) LIBS_SYSTEM LIBS_MACHINE LIBS_DEBUG $(GNULIB_VAR) LIB_STANDARD
+  
+  /* Enable recompilation of certain other files depending on system type.  */
+  
